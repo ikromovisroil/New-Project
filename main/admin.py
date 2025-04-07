@@ -21,3 +21,5 @@ class AftomabilAdmin(admin.ModelAdmin):
     list_display = ('title','demo','date_creat','date_edit','eksports','imports','name','volume','category',)
     list_filter = ('demo','date_creat','eksports','imports','category',)
     search_fields = ('title','name','volume',)
+
+admin.site.register(Pest)
