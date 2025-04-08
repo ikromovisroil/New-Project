@@ -13,11 +13,11 @@
             </tr>
           </thead>
           <tbody>
-          {% for i in area %}
+          {% for i in pest %}
             <tr>
-              <th scope="row">1</th>
-              <td>Mark</td>
-              <td>Otto</td>
+              <th scope="row">{{ forloop.counter }}</th>
+              <td>{{ i.title }}</td>
+              <td>{{ i.damage }}</td>
             </tr>
           {% endfor %}
           </tbody>

@@ -4,72 +4,68 @@ from django.contrib import messages
 from django.urls import reverse
 from .models import Area, Category, Analysis, Pest
 from .forms import NewAnalysisForm
-import re
-from django.shortcuts import get_object_or_404
-from bs4 import BeautifulSoup
-
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.urls import reverse
+import json
 
 
 def redirect_to_admin(request):
     return redirect('/admin/login/?next=/admin/')
 
+
+
 @login_required
 def index(request):
-    if request.method == 'POST':
-        form = NewAnalysisForm(request.POST)
-        if form.is_valid():
-            analysis = form.save(commit=False)
-            analysis.author = request.user
-            analysis.save()
-
-            from bs4 import BeautifulSoup
-
-            soup = BeautifulSoup(analysis.body or "", 'html.parser')
-            ol = soup.find('ol')
-
-            if ol:
-                for li in ol.find_all('li', recursive=False):
-                    title_tag = li.find('strong')
-                    if not title_tag:
-                        continue
-
-                    title = title_tag.get_text(strip=True)
-                    damage = ''
-                    protection = ''
-
-                    for sub_li in li.find_all('li'):
-                        text = sub_li.get_text(strip=True)
-                        if text.lower().startswith('damage:'):
-                            damage = text.split(':', 1)[1].strip()
-                        elif text.lower().startswith('protection:'):
-                            protection = text.split(':', 1)[1].strip()
-
-                    Pest.objects.create(
-                        analysis=analysis,
-                        title=title,
-                        damage=damage,
-                        protection=protection
-                    )
-
-            messages.success(request, "Ma'lumotlar va pestlar saqlandi.")
-            return redirect(reverse('pest_list', args=[analysis.id]))
-        else:
-            messages.error(request, "Xatolik: Ma'lumot to'g'ri emas.")
-    else:
-        form = NewAnalysisForm()
-
     context = {
-        'form': form,
         'area': Area.objects.all(),
         'category': Category.objects.all()
     }
     return render(request, 'main/index.html', context)
 
-
 @login_required
-def pest_list(request,pk):
-    analysis_id = get_object_or_404(Analysis, id=pk)
-    context = {
-        'pest': Pest.objects.filter(analysis_id=analysis_id, analysis__author=request.user),
-    }
-    return render(request, 'main/pest_list.html',context)
+def pest_list(request, pk):
+    analysis = get_object_or_404(Analysis, id=pk)
+    pests = Pest.objects.filter(analysis=analysis)
+    return render(request, 'main/pest_list.html', {'pest': pests})
+
+@csrf_exempt
+@login_required
+def save_analysis_ajax(request):
+    if request.method == 'POST':
+        try:
+            title = request.POST.get('title')
+            area = request.POST.get('area')
+            name = request.POST.get('name')
+            body = request.POST.get('body')
+            volume = request.POST.get('volume')
+            eksports_id = request.POST.get('eksports')
+            imports_id = request.POST.get('imports')
+            category_id = request.POST.get('category')
+            pests = json.loads(request.POST.get('pests'))
+
+            analysis = Analysis.objects.create(
+                title=title,
+                area=area,
+                name=name,
+                body=body,
+                volume=volume,
+                eksports_id=eksports_id,
+                imports_id=imports_id,
+                category_id=category_id,
+                author=request.user
+            )
+
+            for pest in pests:
+                Pest.objects.create(
+                    analysis=analysis,
+                    title=pest['title'],
+                    damage=pest['damage'],
+                    protection=pest['protection']
+                )
+
+            return JsonResponse({'success': True, 'redirect_url': reverse('pest_list', args=[analysis.id])})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid method'})

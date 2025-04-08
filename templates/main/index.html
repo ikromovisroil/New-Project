@@ -1,120 +1,150 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="container">
-        <div class="row m-3">
-            <!-- Left Side: Form -->
-            <div class="col-md-6">
-                <div class="card p-3">
-                    <form id="deepseek-form" method="POST">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="id_title" class="form-label">Title</label>
-                            <input type="text" name="title" class="form-control" maxlength="100" id="id_title" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_area" class="form-label">Area</label>
-                            <input type="text" name="area" class="form-control" maxlength="500" id="id_area" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_eksports" class="form-label">Exports</label>
-                            <select name="eksports" class="form-select" id="id_eksports" required>
-                                {% for i in area %}
-                                <option value="{{ i.id }}">{{ i.title }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_name" class="form-label">Name</label>
-                            <input type="text" name="name" class="form-control" maxlength="100" id="id_name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_imports" class="form-label">Imports</label>
-                            <select name="imports" class="form-select" id="id_imports" required>
-                                {% for i in area %}
-                                <option value="{{ i.id }}">{{ i.title }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_body" class="form-label">Body</label>
-                            <textarea name="body" cols="40" rows="10" class="form-control" style="height: 100px" id="id_body"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_volume" class="form-label">Volume</label>
-                            <input type="number" name="volume" class="form-control" min="0" id="id_volume" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_category" class="form-label">Category</label>
-                            <select name="category" class="form-select" id="id_category" required>
-                                {% for i in category %}
-                                <option value="{{ i.id }}">{{ i.title }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                       <button type="button" class="btn btn-primary w-100" onclick="sendMessage()" id="ask-button">Submit!</button>
-                        <button type="submit" class="btn btn-secondary mt-2 w-100">Clear</button>
-                    </form>
-                </div>
+<div class="container">
+    <div class="row m-3">
+        <div class="col-md-6">
+            <div class="card p-3">
+                <form id="deepseek-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" id="id_title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_area" class="form-label">Area</label>
+                        <input type="text" name="area" class="form-control" id="id_area" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_eksports" class="form-label">Exports</label>
+                        <select name="eksports" class="form-select" id="id_eksports" required>
+                            {% for i in area %}
+                            <option value="{{ i.id }}">{{ i.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">Name</label>
+                        <input type="text" name="name" class="form-control" id="id_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_imports" class="form-label">Imports</label>
+                        <select name="imports" class="form-select" id="id_imports" required>
+                            {% for i in area %}
+                            <option value="{{ i.id }}">{{ i.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_body" class="form-label">Body</label>
+                        <textarea name="body" class="form-control" id="id_body" style="height: 100px"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_volume" class="form-label">Volume</label>
+                        <input type="number" name="volume" class="form-control" id="id_volume" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_category" class="form-label">Category</label>
+                        <select name="category" class="form-select" id="id_category" required>
+                            {% for i in category %}
+                            <option value="{{ i.id }}">{{ i.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary w-100" onclick="sendMessage()" id="ask-button">Submit!</button>
+                    <button type="button" class="btn btn-success mt-2 w-100" onclick="saveData()">Create</button>
+                </form>
             </div>
+        </div>
 
-            <!-- Right Side: Result or DeepSeek Response -->
-            <div class="col-md-6">
-                <div class="card p-3 text-center">
-                    <p class="text-muted" id="response"></p>
-                </div>
+        <div class="col-md-6">
+            <div class="card p-3 text-center">
+                <p class="text-muted" id="response"></p>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        async function sendMessage() {
-            const name = document.getElementById('id_name').value;
-            const imports = document.getElementById('id_imports').value;
-            const eksports = document.getElementById('id_eksports').value;
-            const category = document.getElementById('id_category').value;
-            const responseDiv = document.getElementById('response');
-            const askButton = document.getElementById('ask-button');
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+let latestPests = [];
 
-            if (!name || !imports || !eksports) {
-                responseDiv.innerHTML = 'Please fill in all required fields.';
-                return;
-            }
+async function sendMessage() {
+    const name = document.getElementById('id_name').value;
+    const imports = document.getElementById('id_imports').value;
+    const eksports = document.getElementById('id_eksports').value;
+    const category = document.getElementById('id_category').options[document.getElementById('id_category').selectedIndex].text;
+    const responseDiv = document.getElementById('response');
+    const askButton = document.getElementById('ask-button');
 
-            const input = `Generate a list of at least 10 pests potentially requiring phytosanitary measures associated with ${name} when importing from ${imports} to ${eksports}. Return the results with these parameters. Name of bacteria, damage of bacteria to the ${category}, protection from bacteria. Provide it in a list form.`;
+    if (!name || !imports || !eksports) {
+        responseDiv.innerHTML = 'Please fill in all required fields.';
+        return;
+    }
 
-            responseDiv.innerHTML = 'Loading...';
-            askButton.disabled = true;
+    const input = `Generate a list of at least 10 pests potentially requiring phytosanitary measures associated with ${name} when importing from ${imports} to ${eksports}. Return the results with these parameters. Name of bacteria, damage of bacteria to the ${category}, protection from bacteria. Provide it in a list form.`;
 
-            try {
-                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer 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',
-                        'HTTP-Referer': 'http://localhost:8000',
-                        'X-Title': 'DeepSeek Panel',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        model: 'deepseek/deepseek-r1:free',
-                        messages: [{ role: 'user', content: input }],
-                    }),
-                });
+    responseDiv.innerHTML = 'Loading...';
+    askButton.disabled = true;
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+    try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer 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',
+                'Content-Type': 'application/json',
+                'X-Title': 'DeepSeek Panel'
+            },
+            body: JSON.stringify({
+                model: 'deepseek/deepseek-r1:free',
+                messages: [{ role: 'user', content: input }]
+            })
+        });
 
-                const data = await response.json();
-                console.log(data);
-                const markdownText = data.choices?.[0]?.message?.content || 'No response received.';
-                responseDiv.innerHTML = marked.parse(markdownText);
-            } catch (error) {
-                responseDiv.innerHTML = 'Error: ' + error.message;
-            } finally {
-                askButton.disabled = false;
-            }
+        const data = await response.json();
+        const markdownText = data.choices?.[0]?.message?.content || 'No response received.';
+        responseDiv.innerHTML = marked.parse(markdownText);
+
+        const plainText = markdownText.replace(/<\/?[^>]+(>|$)/g, "");
+        const lines = plainText.split('\n').filter(x => x.trim());
+
+        latestPests = lines.map(line => {
+            const parts = line.split(/Damage:|Protection:/i);
+            return {
+                title: parts[0].replace(/^\d+\.\s*/, '').trim(),
+                damage: parts[1]?.trim() || '',
+                protection: parts[2]?.trim() || ''
+            };
+        });
+
+    } catch (error) {
+        responseDiv.innerHTML = 'Error: ' + error.message;
+    } finally {
+        askButton.disabled = false;
+    }
+}
+
+async function saveData() {
+    const formData = new FormData(document.getElementById('deepseek-form'));
+    formData.append('pests', JSON.stringify(latestPests));
+
+    try {
+        const response = await fetch("{% url 'save_analysis_ajax' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        } else {
+            alert("Xatolik: " + data.error);
         }
-    </script>
-
-{% endblock content %}
+    } catch (error) {
+        alert("Server xatoligi: " + error.message);
+    }
+}
+</script>
+{% endblock %}
