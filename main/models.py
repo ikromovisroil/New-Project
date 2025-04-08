@@ -54,8 +54,6 @@ class Analysis(models.Model):
 class Pest(models.Model):
     analysis = models.ForeignKey(Analysis, on_delete=models.SET_NULL, null=True)
     title = models.CharField(max_length=100)
-    damage = models.CharField(max_length=200, blank=True, null=True)
-    protection = models.CharField(max_length=200, blank=True, null=True)
     date_creat = models.DateField(auto_now_add=True)
 
     def __str__(self):

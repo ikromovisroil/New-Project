@@ -43,7 +43,7 @@ def save_analysis_ajax(request):
             eksports_id = request.POST.get('eksports')
             imports_id = request.POST.get('imports')
             category_id = request.POST.get('category')
-            pests = json.loads(request.POST.get('pests'))
+            pests = json.loads(request.POST.get('pests'))  # [{'title': 'Aphid'}, {'title': 'Thrips'}, ...]
 
             analysis = Analysis.objects.create(
                 title=title,
@@ -60,9 +60,7 @@ def save_analysis_ajax(request):
             for pest in pests:
                 Pest.objects.create(
                     analysis=analysis,
-                    title=pest['title'],
-                    damage=pest['damage'],
-                    protection=pest['protection']
+                    title=pest['title']
                 )
 
             return JsonResponse({'success': True, 'redirect_url': reverse('pest_list', args=[analysis.id])})
