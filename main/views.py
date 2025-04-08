@@ -2,8 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.urls import reverse
-from .models import Area, Category, Analysis, Pest
-from .forms import NewAnalysisForm
+from .models import *
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
@@ -67,3 +66,14 @@ def save_analysis_ajax(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid method'})
+
+
+@login_required
+def risk(request, pk):
+    pest = get_object_or_404(Pest, id=pk)
+    context = {
+        'opros': Opros.objects.all(),
+        'summary_rating': Summary_rating.objects.all(),
+        'confidence_level': Confidence_level.objects.all(),
+    }
+    return render(request, 'main/risk.html', context)

@@ -23,3 +23,8 @@ class AftomabilAdmin(admin.ModelAdmin):
     search_fields = ('title','name','volume',)
 
 admin.site.register(Pest)
+admin.site.register(Opros)
+admin.site.register(Opros_body)
+admin.site.register(Summary_rating)
+admin.site.register(Confidence_level)
+admin.site.register(Opros_answer)
