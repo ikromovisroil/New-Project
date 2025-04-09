@@ -71,6 +71,35 @@ def save_analysis_ajax(request):
 @login_required
 def risk(request, pk):
     pest = get_object_or_404(Pest, id=pk)
+    
+    if request.method == 'POST':
+        # Faollashtirilgan barcha javoblarni topish
+        for key in request.POST:
+            if key.startswith("summary_rating_"):
+                try:
+                    body_id = key.replace("summary_rating_", "")
+                    opros_body_id = int(request.POST.get(f"opros_body_{body_id}"))
+                    summary_rating_id = int(request.POST.get(f"summary_rating_{body_id}"))
+                    confidence_level_id = int(request.POST.get(f"confidence_level_{body_id}"))
+                    body_text = request.POST.get(f"body_{body_id}")
+                    
+                    opros_body = Opros_body.objects.get(id=opros_body_id)
+                    
+                    Opros_answer.objects.create(
+                        author=request.user,
+                        pest=pest,
+                        opros_body=opros_body,
+                        summary_rating_id=summary_rating_id,
+                        confidence_level_id=confidence_level_id,
+                        body=body_text
+                    )
+                except Exception as e:
+                    messages.error(request, f"Xatolik: {e}")
+                    continue
+        
+        messages.success(request, "Barcha javoblar saqlandi.")
+        return redirect(reverse('pest_list', args=[pest.analysis.id]))
+    
     context = {
         'opros': Opros.objects.all(),
         'summary_rating': Summary_rating.objects.all(),

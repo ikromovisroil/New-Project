@@ -2,9 +2,9 @@ from .models import *
 from django import forms
 
 
-class NewAnalysisForm(forms.ModelForm):
+class NewOpros_answerForm(forms.ModelForm):
     class Meta:
-        model = Analysis
-        fields = ('title', 'area', 'eksports','name','imports','body','volume','category',)
+        model = Opros_answer
+        fields = ('opros_body', 'body','summary_rating','confidence_level',)
         exclude = ['author']
-    
+

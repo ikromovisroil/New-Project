@@ -3,59 +3,63 @@
 {% block content %}
 <div class="container">
     <div class="m-3">
-        <div class="accordion" id="accordionPanelsStayOpenExample">
-            {% for i in opros %}
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading{{ i.id }}">
-                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
-                        data-bs-toggle="collapse" data-bs-target="#collapse{{ i.id }}"
-                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
-                        aria-controls="collapse{{ i.id }}">
-                        {{ i.title }}
-                    </button>
-                </h2>
-                <div id="collapse{{ i.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
-                    aria-labelledby="heading{{ i.id }}" data-bs-parent="#accordionPanelsStayOpenExample">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="accordion" id="accordionPanelsStayOpenExample">
+                {% for i in opros %}
+                <!-- accordion-item start -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ i.id }}">
+                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#collapse{{ i.id }}"
+                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                            aria-controls="collapse{{ i.id }}">
+                            {{ i.title }}
+                        </button>
+                    </h2>
+                    <div id="collapse{{ i.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                        aria-labelledby="heading{{ i.id }}" data-bs-parent="#accordionPanelsStayOpenExample">
 
-                    {% for j in i.opros_body_set.all %}
-                    <div class="accordion-body card m-3">
-                        <div>
-                            <h6 class="fw-bold">{{ forloop.counter }}. {{ j.title }}</h6>
-                            <p>{{ j.body }}</p>
-                        </div>
-                       <div>
+                        {% for j in i.opros_body_set.all %}
+                        <div class="accordion-body card m-3">
+                            <div>
+                                <h6 class="fw-bold">{{ forloop.counter }}. {{ j.title }}</h6>
+                                <p>{{ j.body }}</p>
+                            </div>
+                            <input type="hidden" name="opros_body_{{ j.id }}" value="{{ j.id }}">
                             <div class="mb-3">
-                                <label for="id_summary_rating" class="form-label">Summary rating</label>
-                                <select name="summary_rating" class="form-select" id="id_summary_rating" required>
+                                <label class="form-label">Summary rating</label>
+                                <select name="summary_rating_{{ j.id }}" class="form-select" required>
                                     {% for i in summary_rating %}
                                     <option value="{{ i.id }}">{{ i.title }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="id_confidence_level" class="form-label">Confidence level</label>
-                                <select name="confidence_level" class="form-select" id="id_confidence_level" required>
+                                <label class="form-label">Confidence level</label>
+                                <select name="confidence_level_{{ j.id }}" class="form-select" required>
                                     {% for i in confidence_level %}
                                     <option value="{{ i.id }}">{{ i.title }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="id_body" class="form-label">Body</label>
-                                <textarea name="body" class="form-control" id="id_body" style="height: 100px"></textarea>
+                                <label class="form-label">Body</label>
+                                <textarea name="body_{{ j.id }}" class="form-control" style="height: 100px" required></textarea>
                             </div>
-                       </div>
+                        </div>
+                        {% empty %}
+                        <div class="accordion-body">
+                            <p class="text-muted"> Ma'lumot yo'q.</p>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% empty %}
-                    <div class="accordion-body">
-                        <p class="text-muted"> Ma'lumot yo'q.</p>
-                    </div>
-                    {% endfor %}
                 </div>
+                <!-- accordion-item end -->
+                {% endfor %}
             </div>
-            {% endfor %}
-            <button type="button" class="btn btn-success mt-2 w-100">Create</button>
-        </div>
+            <button type="submit" class="btn btn-success mt-2 w-100">Create</button>
+        </form>
     </div>
 </div>
 {% endblock content %}
